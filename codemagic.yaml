@@ -1,0 +1,25 @@
+workflows:
+  ios-unsigned:
+    name: iPhone – surinkimas be Apple narystės
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      flutter: 3.50.1
+      xcode: latest
+    scripts:
+      - name: Paruošti Flutter projektą
+        script: flutter pub get
+      - name: Patikrinti kodą
+        script: flutter analyze
+      - name: Surinkti iPhone versiją be pasirašymo
+        script: flutter build ios --release --no-codesign
+      - name: Supakuoti nepasirašytą IPA
+        script: |
+          set -eu
+          mkdir -p build/ios/unsigned/Payload
+          ditto build/ios/iphoneos/Runner.app build/ios/unsigned/Payload/Runner.app
+          cd build/ios/unsigned
+          ditto -c -k --sequesterRsrc --keepParent Payload Masazo-laikmatis-nepasirasyta.ipa
+    artifacts:
+      - build/ios/unsigned/*.ipa
+      - /tmp/xcodebuild_logs/*.log
